@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: #e8eef4;
+  --color-slate-950: #0b1219;
+  --color-slate-900: #141c28;
+  --color-slate-700: #2c3a4c;
+  --color-appetite: #3ba8a0;
+  --color-appetite-dim: #1a5f5a;
+  --color-amber: #d9a441;
+  --color-coral: #e0574f;
+  --color-steel: #7a90a6;
+  --color-brand: #a8d0cb;
+  --font-display: "Source Serif 4", serif;
+  --font-body: "Source Sans 3", sans-serif;
+  --font-mono: "Source Code Pro", monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --motion-loop: 220ms ease-in-out;
+  --motion-block: 180ms ease-out;
+  --motion-alert: 240ms ease-in-out;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--color-slate-950);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 120% 80% at 10% -20%, rgba(26, 95, 90, 0.22), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 90% 0%, rgba(44, 58, 76, 0.35), transparent 50%),
+    linear-gradient(165deg, #0b1219 0%, #101820 45%, #0b1219 100%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+/* Subtle four-beat RMF loop watermark */
+.loop-watermark {
+  position: relative;
+}
+
+.loop-watermark::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background:
+    conic-gradient(
+      from 0deg at 92% 8%,
+      var(--color-appetite) 0deg 90deg,
+      var(--color-amber) 90deg 180deg,
+      var(--color-steel) 180deg 270deg,
+      var(--color-coral) 270deg 360deg
+    );
+  mask-image: radial-gradient(circle at 92% 8%, black 0 28px, transparent 72px);
+  -webkit-mask-image: radial-gradient(circle at 92% 8%, black 0 28px, transparent 72px);
+}
+
+@keyframes loop-advance {
+  0% { opacity: 0.55; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes block-flash {
+  0% { background-color: rgba(224, 87, 79, 0.22); }
+  100% { background-color: transparent; }
+}
+
+@keyframes alert-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 164, 65, 0.4); }
+  100% { box-shadow: 0 0 0 10px rgba(217, 164, 65, 0); }
+}
+
+.motion-loop {
+  animation: loop-advance var(--motion-loop);
+}
+
+.motion-block {
+  animation: block-flash var(--motion-block);
+}
+
+.motion-alert {
+  animation: alert-pulse var(--motion-alert);
+}

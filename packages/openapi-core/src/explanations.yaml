@@ -1,0 +1,200 @@
+openapi: 3.1.0
+info:
+  title: Guardloop Explanations API
+  version: 0.1.0
+  description: |
+    Explanation packs for AI decisions — feature rationale with PII minimisation (BR-3).
+  license:
+    name: Proprietary
+    url: https://guardloop.local/license
+  x-domain: exp
+servers:
+  - url: https://api.guardloop.local
+    description: Guardloop API
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Explanations
+    description: Decision explanation packs
+paths:
+  /v1/explanations:
+    get:
+      operationId: listExplanationPacks
+      tags: [Explanations]
+      summary: List explanation packs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: useCaseId
+          in: query
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, released]
+      responses:
+        '200':
+          description: Explanation packs page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplanationPackListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createExplanationPack
+      tags: [Explanations]
+      summary: Create an explanation pack
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExplanationPackCreateRequest'
+      responses:
+        '201':
+          description: Explanation pack created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplanationPackResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/explanations/{explanationPackId}:
+    get:
+      operationId: getExplanationPack
+      tags: [Explanations]
+      summary: Get explanation pack
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: explanationPackId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/ExplanationPackId
+      responses:
+        '200':
+          description: Explanation pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplanationPackResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth
+
+  schemas:
+    ExplanationPackStatus:
+      type: string
+      enum: [draft, released]
+    ExplanationPack:
+      type: object
+      required:
+        - explanationPackId
+        - useCaseId
+        - decisionRef
+        - featureRationaleSummary
+        - fairnessPolicyVersion
+        - piiMinimised
+        - status
+        - createdAt
+      properties:
+        explanationPackId:
+          $ref: ./common/primitives.yaml#/components/schemas/ExplanationPackId
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        decisionRef:
+          type: string
+          minLength: 1
+        featureRationaleSummary:
+          type: string
+          minLength: 1
+        fairnessPolicyVersion:
+          type: string
+          minLength: 1
+        piiMinimised:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/ExplanationPackStatus'
+        createdAt:
+          type: string
+          format: date-time
+        releasedAt:
+          type: string
+          format: date-time
+    ExplanationPackCreateRequest:
+      type: object
+      required:
+        - useCaseId
+        - decisionRef
+        - featureRationaleSummary
+        - fairnessPolicyVersion
+        - piiMinimised
+      properties:
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        decisionRef:
+          type: string
+          minLength: 1
+        featureRationaleSummary:
+          type: string
+          minLength: 1
+        fairnessPolicyVersion:
+          type: string
+          minLength: 1
+        piiMinimised:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/ExplanationPackStatus'
+    ExplanationPackResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ExplanationPack'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ExplanationPackListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExplanationPack'
+        nextCursor:
+          type: string
+    ExplanationPackListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ExplanationPackListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

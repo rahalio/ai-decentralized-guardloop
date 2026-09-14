@@ -1,0 +1,439 @@
+openapi: 3.1.0
+info:
+  title: Guardloop Controls API
+  version: 0.1.0
+  description: |
+    Control tests, promotion gates, and sandbox evidence for AI model release (BR-6, BR-7).
+  license:
+    name: Proprietary
+    url: https://guardloop.local/license
+  x-domain: ctl
+servers:
+  - url: https://api.guardloop.local
+    description: Guardloop API
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Controls
+    description: Control tests, promotion gates, and sandbox evidence
+paths:
+  /v1/use-cases/{useCaseId}/control-tests:
+    parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+    get:
+      operationId: listControlTests
+      tags: [Controls]
+      summary: List control tests for a use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Control tests page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlTestListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createControlTest
+      tags: [Controls]
+      summary: Record a control / fairness test result
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlTestCreateRequest'
+      responses:
+        '201':
+          description: Control test recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlTestResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}/control-tests/{controlTestId}:
+    get:
+      operationId: getControlTest
+      tags: [Controls]
+      summary: Get control test
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        - name: controlTestId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/ControlTestId
+      responses:
+        '200':
+          description: Control test
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlTestResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}/promotion-gates:
+    parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+    get:
+      operationId: listPromotionGates
+      tags: [Controls]
+      summary: List promotion gate decisions for a use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Promotion gates page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionGateListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: evaluatePromotionGate
+      tags: [Controls]
+      summary: Evaluate promotion gate for a model version
+      description: Allow/block release based on fairness tests and sandbox evidence.
+      x-repository: none
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionGateEvaluateRequest'
+      responses:
+        '200':
+          description: Promotion gate decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionGateResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}/sandbox-evidence:
+    parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+    get:
+      operationId: listSandboxEvidence
+      tags: [Controls]
+      summary: List sandbox evidence for a use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Sandbox evidence page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxEvidenceListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createSandboxEvidence
+      tags: [Controls]
+      summary: Attach sandbox / line-of-defence evidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SandboxEvidenceCreateRequest'
+      responses:
+        '201':
+          description: Sandbox evidence created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxEvidenceResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth
+
+  schemas:
+    LineOfDefence:
+      type: string
+      enum: [lod1, lod2, lod3]
+    PromotionDecision:
+      type: string
+      enum: [allow, block]
+    ControlTest:
+      type: object
+      required:
+        - controlTestId
+        - useCaseId
+        - cohortLabel
+        - fairnessPassed
+        - policyVersion
+        - createdAt
+      properties:
+        controlTestId:
+          $ref: ./common/primitives.yaml#/components/schemas/ControlTestId
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        cohortLabel:
+          type: string
+          minLength: 1
+        fairnessPassed:
+          type: boolean
+        policyVersion:
+          type: string
+          minLength: 1
+        evidenceNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ControlTestCreateRequest:
+      type: object
+      required: [cohortLabel, fairnessPassed, policyVersion]
+      properties:
+        cohortLabel:
+          type: string
+          minLength: 1
+        fairnessPassed:
+          type: boolean
+        policyVersion:
+          type: string
+          minLength: 1
+        evidenceNotes:
+          type: string
+    PromotionGate:
+      type: object
+      required:
+        - promotionGateId
+        - useCaseId
+        - modelVersion
+        - decision
+        - fairnessTestsPassed
+        - createdAt
+      properties:
+        promotionGateId:
+          $ref: ./common/primitives.yaml#/components/schemas/PromotionGateId
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        modelVersion:
+          type: string
+          minLength: 1
+        decision:
+          $ref: '#/components/schemas/PromotionDecision'
+        fairnessTestsPassed:
+          type: boolean
+        fairnessPolicyId:
+          $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        sandboxEvidenceId:
+          $ref: ./common/primitives.yaml#/components/schemas/SandboxEvidenceId
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PromotionGateEvaluateRequest:
+      type: object
+      required: [modelVersion]
+      properties:
+        modelVersion:
+          type: string
+          minLength: 1
+        fairnessPolicyId:
+          $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        sandboxEvidenceId:
+          $ref: ./common/primitives.yaml#/components/schemas/SandboxEvidenceId
+    SandboxEvidence:
+      type: object
+      required:
+        - sandboxEvidenceId
+        - useCaseId
+        - lineOfDefence
+        - comments
+        - createdAt
+      properties:
+        sandboxEvidenceId:
+          $ref: ./common/primitives.yaml#/components/schemas/SandboxEvidenceId
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        lineOfDefence:
+          $ref: '#/components/schemas/LineOfDefence'
+        comments:
+          type: array
+          items:
+            type: string
+        authorUserId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        createdAt:
+          type: string
+          format: date-time
+    SandboxEvidenceCreateRequest:
+      type: object
+      required: [lineOfDefence, comments]
+      properties:
+        lineOfDefence:
+          $ref: '#/components/schemas/LineOfDefence'
+        comments:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        authorUserId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+    ControlTestResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ControlTest'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ControlTestListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ControlTest'
+        nextCursor:
+          type: string
+    ControlTestListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ControlTestListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    PromotionGateResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PromotionGate'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    PromotionGateListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromotionGate'
+        nextCursor:
+          type: string
+    PromotionGateListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PromotionGateListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    SandboxEvidenceResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SandboxEvidence'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    SandboxEvidenceListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SandboxEvidence'
+        nextCursor:
+          type: string
+    SandboxEvidenceListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SandboxEvidenceListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

@@ -1,0 +1,317 @@
+openapi: 3.1.0
+info:
+  title: Guardloop Use Cases API
+  version: 0.1.0
+  description: |
+    AI use case inventory — register, bind fairness/appetite policies, expand to customer-impacting scope (BR-1, BR-11).
+  license:
+    name: Proprietary
+    url: https://guardloop.local/license
+  x-domain: usc
+servers:
+  - url: https://api.guardloop.local
+    description: Guardloop API
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: UseCases
+    description: AI use case inventory and policy binding
+paths:
+  /v1/use-cases:
+    get:
+      operationId: listAiUseCases
+      tags: [UseCases]
+      summary: List AI use cases
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, expanding, retired]
+        - name: customerImpacting
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Use cases page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: registerAiUseCase
+      tags: [UseCases]
+      summary: Register an AI use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiUseCaseCreateRequest'
+      responses:
+        '201':
+          description: Use case registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}:
+    parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+    get:
+      operationId: getAiUseCase
+      tags: [UseCases]
+      summary: Get AI use case
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    patch:
+      operationId: updateAiUseCase
+      tags: [UseCases]
+      summary: Update AI use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiUseCaseUpdateRequest'
+      responses:
+        '200':
+          description: Updated use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}/bind-policy:
+    post:
+      operationId: bindFairnessPolicy
+      tags: [UseCases]
+      summary: Bind fairness policy and appetite limit to use case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindFairnessPolicyRequest'
+      responses:
+        '200':
+          description: Policies bound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/use-cases/{useCaseId}/expand-to-customer:
+    post:
+      operationId: expandUseCaseToCustomer
+      tags: [UseCases]
+      summary: Expand use case to customer-impacting scope
+      description: Forces re-Identify gate before customer impact (BR-11).
+      x-repository: none
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Expansion started; Identify gate required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUseCaseResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth
+
+  schemas:
+    UseCaseSector:
+      type: string
+      enum: [insurance, banking, other]
+    UseCaseStatus:
+      type: string
+      enum: [draft, active, expanding, retired]
+    AiUseCase:
+      type: object
+      required:
+        - useCaseId
+        - name
+        - customerImpacting
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        name:
+          type: string
+          minLength: 1
+        customerImpacting:
+          type: boolean
+        sector:
+          $ref: '#/components/schemas/UseCaseSector'
+        status:
+          $ref: '#/components/schemas/UseCaseStatus'
+        learningCadenceDays:
+          type: integer
+          minimum: 1
+        boundFairnessPolicyId:
+          $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        boundAppetiteLimitId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppetiteLimitId
+        lastIdentifyAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AiUseCaseCreateRequest:
+      type: object
+      required: [name, customerImpacting]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        customerImpacting:
+          type: boolean
+        sector:
+          $ref: '#/components/schemas/UseCaseSector'
+        learningCadenceDays:
+          type: integer
+          minimum: 1
+    AiUseCaseUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        customerImpacting:
+          type: boolean
+        sector:
+          $ref: '#/components/schemas/UseCaseSector'
+        learningCadenceDays:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/UseCaseStatus'
+    BindFairnessPolicyRequest:
+      type: object
+      required: [fairnessPolicyId, appetiteLimitId]
+      properties:
+        fairnessPolicyId:
+          $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        appetiteLimitId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppetiteLimitId
+    AiUseCaseResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AiUseCase'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    AiUseCaseListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AiUseCase'
+        nextCursor:
+          type: string
+    AiUseCaseListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AiUseCaseListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

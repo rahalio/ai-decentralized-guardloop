@@ -1,0 +1,1070 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const createControlTest_Body = z
+  .object({
+    cohortLabel: z.string().min(1),
+    fairnessPassed: z.boolean(),
+    policyVersion: z.string().min(1),
+    evidenceNotes: z.string().optional(),
+  })
+  .passthrough();
+const evaluatePromotionGate_Body = z
+  .object({
+    modelVersion: z.string().min(1),
+    fairnessPolicyId: z
+      .string()
+      .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    sandboxEvidenceId: z
+      .string()
+      .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+  })
+  .passthrough();
+const createSandboxEvidence_Body = z
+  .object({
+    lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+    comments: z.array(z.string()).min(1),
+    authorUserId: z
+      .string()
+      .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+  })
+  .passthrough();
+const LineOfDefence = z.enum(['lod1', 'lod2', 'lod3']);
+const PromotionDecision = z.enum(['allow', 'block']);
+const ControlTest = z
+  .object({
+    controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+    useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+    cohortLabel: z.string().min(1),
+    fairnessPassed: z.boolean(),
+    policyVersion: z.string().min(1),
+    evidenceNotes: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const ControlTestCreateRequest = z
+  .object({
+    cohortLabel: z.string().min(1),
+    fairnessPassed: z.boolean(),
+    policyVersion: z.string().min(1),
+    evidenceNotes: z.string().optional(),
+  })
+  .passthrough();
+const PromotionGate = z
+  .object({
+    promotionGateId: z.string().regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+    useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+    modelVersion: z.string().min(1),
+    decision: z.enum(['allow', 'block']),
+    fairnessTestsPassed: z.boolean(),
+    fairnessPolicyId: z
+      .string()
+      .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    sandboxEvidenceId: z
+      .string()
+      .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    reason: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const PromotionGateEvaluateRequest = z
+  .object({
+    modelVersion: z.string().min(1),
+    fairnessPolicyId: z
+      .string()
+      .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    sandboxEvidenceId: z
+      .string()
+      .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+  })
+  .passthrough();
+const SandboxEvidence = z
+  .object({
+    sandboxEvidenceId: z.string().regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+    useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+    lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+    comments: z.array(z.string()),
+    authorUserId: z
+      .string()
+      .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const SandboxEvidenceCreateRequest = z
+  .object({
+    lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+    comments: z.array(z.string()).min(1),
+    authorUserId: z
+      .string()
+      .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+  })
+  .passthrough();
+const ControlTestResponse = z
+  .object({
+    data: z
+      .object({
+        controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+        useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+        cohortLabel: z.string().min(1),
+        fairnessPassed: z.boolean(),
+        policyVersion: z.string().min(1),
+        evidenceNotes: z.string().optional(),
+        createdAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const ControlTestListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+          useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+          cohortLabel: z.string().min(1),
+          fairnessPassed: z.boolean(),
+          policyVersion: z.string().min(1),
+          evidenceNotes: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ControlTestListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+              useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+              cohortLabel: z.string().min(1),
+              fairnessPassed: z.boolean(),
+              policyVersion: z.string().min(1),
+              evidenceNotes: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const PromotionGateResponse = z
+  .object({
+    data: z
+      .object({
+        promotionGateId: z.string().regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+        useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+        modelVersion: z.string().min(1),
+        decision: z.enum(['allow', 'block']),
+        fairnessTestsPassed: z.boolean(),
+        fairnessPolicyId: z
+          .string()
+          .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+          .optional(),
+        sandboxEvidenceId: z
+          .string()
+          .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+          .optional(),
+        reason: z.string().optional(),
+        createdAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const PromotionGateListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          promotionGateId: z.string().regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+          useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+          modelVersion: z.string().min(1),
+          decision: z.enum(['allow', 'block']),
+          fairnessTestsPassed: z.boolean(),
+          fairnessPolicyId: z
+            .string()
+            .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+            .optional(),
+          sandboxEvidenceId: z
+            .string()
+            .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+            .optional(),
+          reason: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const PromotionGateListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              promotionGateId: z.string().regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+              useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+              modelVersion: z.string().min(1),
+              decision: z.enum(['allow', 'block']),
+              fairnessTestsPassed: z.boolean(),
+              fairnessPolicyId: z
+                .string()
+                .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+                .optional(),
+              sandboxEvidenceId: z
+                .string()
+                .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+                .optional(),
+              reason: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const SandboxEvidenceResponse = z
+  .object({
+    data: z
+      .object({
+        sandboxEvidenceId: z.string().regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+        useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+        lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+        comments: z.array(z.string()),
+        authorUserId: z
+          .string()
+          .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+          .optional(),
+        createdAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const SandboxEvidenceListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          sandboxEvidenceId: z.string().regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+          useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+          lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+          comments: z.array(z.string()),
+          authorUserId: z
+            .string()
+            .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+            .optional(),
+          createdAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const SandboxEvidenceListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              sandboxEvidenceId: z
+                .string()
+                .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+              useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+              lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+              comments: z.array(z.string()),
+              authorUserId: z
+                .string()
+                .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+                .optional(),
+              createdAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const UseCaseId = z.string();
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const ControlTestId = z.string();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const PromotionGateId = z.string();
+const FairnessPolicyId = z.string();
+const SandboxEvidenceId = z.string();
+const UserId = z.string();
+
+export const schemas: any = {
+  createControlTest_Body,
+  evaluatePromotionGate_Body,
+  createSandboxEvidence_Body,
+  LineOfDefence,
+  PromotionDecision,
+  ControlTest,
+  ControlTestCreateRequest,
+  PromotionGate,
+  PromotionGateEvaluateRequest,
+  SandboxEvidence,
+  SandboxEvidenceCreateRequest,
+  ControlTestResponse,
+  ControlTestListData,
+  ControlTestListResponse,
+  PromotionGateResponse,
+  PromotionGateListData,
+  PromotionGateListResponse,
+  SandboxEvidenceResponse,
+  SandboxEvidenceListData,
+  SandboxEvidenceListResponse,
+  UseCaseId,
+  Problem,
+  ControlTestId,
+  ResponseMeta,
+  PromotionGateId,
+  FairnessPolicyId,
+  SandboxEvidenceId,
+  UserId,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v1/use-cases/:useCaseId/control-tests',
+    alias: 'listControlTests',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().min(1).max(512).optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  controlTestId: z
+                    .string()
+                    .regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  cohortLabel: z.string().min(1),
+                  fairnessPassed: z.boolean(),
+                  policyVersion: z.string().min(1),
+                  evidenceNotes: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/use-cases/:useCaseId/control-tests',
+    alias: 'createControlTest',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: createControlTest_Body,
+      },
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            cohortLabel: z.string().min(1),
+            fairnessPassed: z.boolean(),
+            policyVersion: z.string().min(1),
+            evidenceNotes: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/use-cases/:useCaseId/control-tests/:controlTestId',
+    alias: 'getControlTest',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'controlTestId',
+        type: 'Path',
+        schema: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            controlTestId: z.string().regex(/^ctl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            cohortLabel: z.string().min(1),
+            fairnessPassed: z.boolean(),
+            policyVersion: z.string().min(1),
+            evidenceNotes: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/use-cases/:useCaseId/promotion-gates',
+    alias: 'listPromotionGates',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().min(1).max(512).optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  promotionGateId: z
+                    .string()
+                    .regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  modelVersion: z.string().min(1),
+                  decision: z.enum(['allow', 'block']),
+                  fairnessTestsPassed: z.boolean(),
+                  fairnessPolicyId: z
+                    .string()
+                    .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+                    .optional(),
+                  sandboxEvidenceId: z
+                    .string()
+                    .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+                    .optional(),
+                  reason: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/use-cases/:useCaseId/promotion-gates',
+    alias: 'evaluatePromotionGate',
+    description: `Allow/block release based on fairness tests and sandbox evidence.`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: evaluatePromotionGate_Body,
+      },
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            promotionGateId: z.string().regex(/^pgt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelVersion: z.string().min(1),
+            decision: z.enum(['allow', 'block']),
+            fairnessTestsPassed: z.boolean(),
+            fairnessPolicyId: z
+              .string()
+              .regex(/^fpol_[0-9A-HJKMNP-TV-Z]{26}$/)
+              .optional(),
+            sandboxEvidenceId: z
+              .string()
+              .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/)
+              .optional(),
+            reason: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/use-cases/:useCaseId/sandbox-evidence',
+    alias: 'listSandboxEvidence',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().min(1).max(512).optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  sandboxEvidenceId: z
+                    .string()
+                    .regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+                  comments: z.array(z.string()),
+                  authorUserId: z
+                    .string()
+                    .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+                    .optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/use-cases/:useCaseId/sandbox-evidence',
+    alias: 'createSandboxEvidence',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: createSandboxEvidence_Body,
+      },
+      {
+        name: 'useCaseId',
+        type: 'Path',
+        schema: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            sandboxEvidenceId: z.string().regex(/^sbx_[0-9A-HJKMNP-TV-Z]{26}$/),
+            useCaseId: z.string().regex(/^usc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            lineOfDefence: z.enum(['lod1', 'lod2', 'lod3']),
+            comments: z.array(z.string()),
+            authorUserId: z
+              .string()
+              .regex(/^usr_[0-9A-HJKMNP-TV-Z]{26}$/)
+              .optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

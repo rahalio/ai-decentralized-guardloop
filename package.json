@@ -1,0 +1,32 @@
+{
+  "name": "guardloop",
+  "version": "0.1.0",
+  "description": "Guardloop — continuous Identify–Assess–Control–Monitor desk for AI model risk in financial services",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:openapi": "pnpm --filter @guardloop/openapi-core lint:domains",
+    "bundle:openapi": "pnpm --filter @guardloop/openapi-core bundle:domains",
+    "build": "pnpm --filter @guardloop/core build && pnpm --filter @guardloop/services build && pnpm --filter @guardloop/adapters build && pnpm --filter @guardloop/api-server build",
+    "build:web": "pnpm --filter @guardloop/webapp build",
+    "dev:api": "pnpm --filter @guardloop/api-server dev",
+    "dev:web": "pnpm --filter @guardloop/webapp dev",
+    "codegen:core": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src .codegen/.venv/bin/python -m zero_codegen.cli.main generate --all --layers core --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:identity": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src .codegen/.venv/bin/python -m zero_codegen.cli.main generate --domain identity --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:domain": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src .codegen/.venv/bin/python -m zero_codegen.cli.main generate --config .codegen/.zero-codegen-merged.json --skip-build --domain",
+    "codegen:paths": "node scripts/sync-codegen-paths.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9.0.0"
+  }
+}

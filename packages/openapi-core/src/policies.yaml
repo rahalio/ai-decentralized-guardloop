@@ -1,0 +1,382 @@
+openapi: 3.1.0
+info:
+  title: Guardloop Policies API
+  version: 0.1.0
+  description: |
+    Fairness policies and risk appetite limits for AI use cases (BR-2, BR-3).
+  license:
+    name: Proprietary
+    url: https://guardloop.local/license
+  x-domain: pol
+servers:
+  - url: https://api.guardloop.local
+    description: Guardloop API
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Policies
+    description: Fairness policies and risk appetite limits
+paths:
+  /v1/policies/fairness:
+    get:
+      operationId: listFairnessPolicies
+      tags: [Policies]
+      summary: List fairness policies
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published]
+      responses:
+        '200':
+          description: Fairness policies page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FairnessPolicyListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createFairnessPolicy
+      tags: [Policies]
+      summary: Create a fairness policy draft
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FairnessPolicyCreateRequest'
+      responses:
+        '201':
+          description: Fairness policy created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FairnessPolicyResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/policies/fairness/{fairnessPolicyId}:
+    get:
+      operationId: getFairnessPolicy
+      tags: [Policies]
+      summary: Get fairness policy
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fairnessPolicyId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+      responses:
+        '200':
+          description: Fairness policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FairnessPolicyResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/policies/fairness/{fairnessPolicyId}/publish:
+    post:
+      operationId: publishFairnessPolicy
+      tags: [Policies]
+      summary: Publish fairness policy for binding
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fairnessPolicyId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Fairness policy published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FairnessPolicyResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/policies/appetite:
+    get:
+      operationId: listRiskAppetiteLimits
+      tags: [Policies]
+      summary: List risk appetite limits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published]
+      responses:
+        '200':
+          description: Appetite limits page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAppetiteLimitListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createRiskAppetiteLimit
+      tags: [Policies]
+      summary: Create a risk appetite limit
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAppetiteLimitCreateRequest'
+      responses:
+        '201':
+          description: Appetite limit created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAppetiteLimitResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/policies/appetite/{appetiteLimitId}:
+    get:
+      operationId: getRiskAppetiteLimit
+      tags: [Policies]
+      summary: Get risk appetite limit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appetiteLimitId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AppetiteLimitId
+      responses:
+        '200':
+          description: Appetite limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAppetiteLimitResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth
+
+  schemas:
+    PolicyLifecycleStatus:
+      type: string
+      enum: [draft, published]
+    FairnessPolicy:
+      type: object
+      required:
+        - fairnessPolicyId
+        - version
+        - status
+        - rules
+        - biasTolerance
+        - explainabilityCoverage
+        - createdAt
+        - updatedAt
+      properties:
+        fairnessPolicyId:
+          $ref: ./common/primitives.yaml#/components/schemas/FairnessPolicyId
+        version:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/PolicyLifecycleStatus'
+        rules:
+          type: array
+          items:
+            type: string
+        biasTolerance:
+          type: number
+          format: double
+        explainabilityCoverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FairnessPolicyCreateRequest:
+      type: object
+      required: [version, rules, biasTolerance, explainabilityCoverage]
+      properties:
+        version:
+          type: string
+          minLength: 1
+        rules:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        biasTolerance:
+          type: number
+          format: double
+        explainabilityCoverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+    RiskAppetiteLimit:
+      type: object
+      required:
+        - appetiteLimitId
+        - version
+        - status
+        - biasTolerance
+        - explainabilityCoverage
+        - createdAt
+        - updatedAt
+      properties:
+        appetiteLimitId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppetiteLimitId
+        version:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/PolicyLifecycleStatus'
+        biasTolerance:
+          type: number
+          format: double
+        explainabilityCoverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    RiskAppetiteLimitCreateRequest:
+      type: object
+      required: [version, biasTolerance, explainabilityCoverage]
+      properties:
+        version:
+          type: string
+          minLength: 1
+        biasTolerance:
+          type: number
+          format: double
+        explainabilityCoverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        notes:
+          type: string
+    FairnessPolicyResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/FairnessPolicy'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    FairnessPolicyListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FairnessPolicy'
+        nextCursor:
+          type: string
+    FairnessPolicyListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/FairnessPolicyListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    RiskAppetiteLimitResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/RiskAppetiteLimit'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    RiskAppetiteLimitListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAppetiteLimit'
+        nextCursor:
+          type: string
+    RiskAppetiteLimitListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/RiskAppetiteLimitListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

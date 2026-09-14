@@ -1,0 +1,36 @@
+apis:
+  identity:
+    root: src/identity.yaml
+  use-cases:
+    root: src/use-cases.yaml
+  policies:
+    root: src/policies.yaml
+  assessments:
+    root: src/assessments.yaml
+  controls:
+    root: src/controls.yaml
+  monitoring:
+    root: src/monitoring.yaml
+  remediations:
+    root: src/remediations.yaml
+  explanations:
+    root: src/explanations.yaml
+  reporting:
+    root: src/reporting.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: off
+  operation-4xx-response: warn
+  info-license: off
+  info-license-url: off
+  tag-description: off
+  operation-operationId: error
+  no-invalid-media-type-examples: off
+
+theme:
+  openapi:
+    generateCodeSamples:
+      languages: []

@@ -1,0 +1,223 @@
+openapi: 3.1.0
+info:
+  title: Guardloop Monitoring API
+  version: 0.1.0
+  description: |
+    Drift, bias, driver-shift, and conduct alerts for live AI use cases (BR-8, BR-9).
+  license:
+    name: Proprietary
+    url: https://guardloop.local/license
+  x-domain: mon
+servers:
+  - url: https://api.guardloop.local
+    description: Guardloop API
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Monitoring
+    description: Monitor alerts for drift, bias, and conduct
+paths:
+  /v1/monitoring/alerts:
+    get:
+      operationId: listMonitorAlerts
+      tags: [Monitoring]
+      summary: List monitor alerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: useCaseId
+          in: query
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, acknowledged, closed]
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [drift, bias, driver_shift, conduct]
+      responses:
+        '200':
+          description: Alerts page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitorAlertListResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: raiseMonitorAlert
+      tags: [Monitoring]
+      summary: Raise a monitor alert
+      description: Ingest path for monitoring pipelines; accepts API key or bearer.
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitorAlertRaiseRequest'
+      responses:
+        '201':
+          description: Alert raised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitorAlertResponse'
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/monitoring/alerts/{alertId}:
+    get:
+      operationId: getMonitorAlert
+      tags: [Monitoring]
+      summary: Get monitor alert
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AlertId
+      responses:
+        '200':
+          description: Alert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitorAlertResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/monitoring/alerts/{alertId}/acknowledge:
+    post:
+      operationId: acknowledgeMonitorAlert
+      tags: [Monitoring]
+      summary: Acknowledge a monitor alert
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AlertId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Alert acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitorAlertResponse'
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth
+
+  schemas:
+    AlertKind:
+      type: string
+      enum: [drift, bias, driver_shift, conduct]
+    AlertSeverity:
+      type: string
+      enum: [low, medium, high, critical]
+    AlertStatus:
+      type: string
+      enum: [open, acknowledged, closed]
+    MonitorAlert:
+      type: object
+      required:
+        - alertId
+        - useCaseId
+        - kind
+        - severity
+        - status
+        - raisedAt
+      properties:
+        alertId:
+          $ref: ./common/primitives.yaml#/components/schemas/AlertId
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        kind:
+          $ref: '#/components/schemas/AlertKind'
+        severity:
+          $ref: '#/components/schemas/AlertSeverity'
+        detail:
+          type: string
+        status:
+          $ref: '#/components/schemas/AlertStatus'
+        raisedAt:
+          type: string
+          format: date-time
+        acknowledgedAt:
+          type: string
+          format: date-time
+    MonitorAlertRaiseRequest:
+      type: object
+      required: [useCaseId, kind, severity]
+      properties:
+        useCaseId:
+          $ref: ./common/primitives.yaml#/components/schemas/UseCaseId
+        kind:
+          $ref: '#/components/schemas/AlertKind'
+        severity:
+          $ref: '#/components/schemas/AlertSeverity'
+        detail:
+          type: string
+    MonitorAlertResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MonitorAlert'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    MonitorAlertListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonitorAlert'
+        nextCursor:
+          type: string
+    MonitorAlertListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MonitorAlertListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

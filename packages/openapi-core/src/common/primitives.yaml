@@ -1,0 +1,95 @@
+openapi: 3.1.0
+info:
+  title: Shared primitives
+  version: 0.1.0
+  description: Prefixed IDs shared across Guardloop domains.
+paths: {}
+components:
+  schemas:
+    TenantId:
+      type: string
+      description: Prefixed ULID-style tenant identifier.
+      pattern: '^tnt_[0-9A-HJKMNP-TV-Z]{26}$'
+      example: tnt_01HZYXK8J0M0W5N6P7Q8R9S0T1U2
+    UserId:
+      type: string
+      description: Prefixed ULID-style tenant operator user identifier.
+      pattern: '^usr_[0-9A-HJKMNP-TV-Z]{26}$'
+      example: usr_01HZYXK8J0M0W5N6P7Q8R9S0T1U2
+    Currency:
+      type: string
+      description: ISO 4217 currency code.
+      minLength: 3
+      maxLength: 3
+      pattern: '^[A-Z]{3}$'
+      example: USD
+    Money:
+      type: object
+      description: Decimal-string amount + currency (never IEEE float).
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          description: Signed decimal string with up to 5 fractional digits.
+          pattern: '^-?\d+(\.\d{1,5})?$'
+          example: "1234.56"
+        currency:
+          $ref: '#/components/schemas/Currency'
+    JobStatus:
+      type: string
+      description: Generic async job lifecycle.
+      enum:
+        - queued
+        - running
+        - done
+        - failed
+    UseCaseId:
+      type: string
+      description: Prefixed AI use case id (`usc_…`).
+      pattern: '^usc_[0-9A-HJKMNP-TV-Z]{26}$'
+    FairnessPolicyId:
+      type: string
+      description: Prefixed fairness policy id (`pol_…`).
+      pattern: '^pol_[0-9A-HJKMNP-TV-Z]{26}$'
+    AppetiteLimitId:
+      type: string
+      description: Prefixed risk appetite limit id (`apl_…`).
+      pattern: '^pol_[0-9A-HJKMNP-TV-Z]{26}$'
+    IdentificationId:
+      type: string
+      description: Prefixed risk identification id (`rid_…`).
+      pattern: '^rid_[0-9A-HJKMNP-TV-Z]{26}$'
+    AssessmentId:
+      type: string
+      description: Prefixed risk assessment id (`ras_…`).
+      pattern: '^ras_[0-9A-HJKMNP-TV-Z]{26}$'
+    ControlTestId:
+      type: string
+      description: Prefixed control test id (`ctl_…`).
+      pattern: '^ctl_[0-9A-HJKMNP-TV-Z]{26}$'
+    PromotionGateId:
+      type: string
+      description: Prefixed promotion gate id (`pgt_…`).
+      pattern: '^pgt_[0-9A-HJKMNP-TV-Z]{26}$'
+    SandboxEvidenceId:
+      type: string
+      description: Prefixed sandbox evidence id (`sbx_…`).
+      pattern: '^sbx_[0-9A-HJKMNP-TV-Z]{26}$'
+    AlertId:
+      type: string
+      description: Prefixed monitor alert id (`alt_…`).
+      pattern: '^alt_[0-9A-HJKMNP-TV-Z]{26}$'
+    RemediationId:
+      type: string
+      description: Prefixed remediation case id (`rmd_…`).
+      pattern: '^rmd_[0-9A-HJKMNP-TV-Z]{26}$'
+    ExplanationPackId:
+      type: string
+      description: Prefixed explanation pack id (`exp_…`).
+      pattern: '^exp_[0-9A-HJKMNP-TV-Z]{26}$'
+    ReportId:
+      type: string
+      description: Prefixed audit/board export id (`rpt_…`).
+      pattern: '^rpt_[0-9A-HJKMNP-TV-Z]{26}$'
