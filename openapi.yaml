@@ -1,0 +1,693 @@
+openapi: 3.0.3
+info:
+  title: Guardloop
+  version: 0.1.0
+  description: Continuous Identify-Assess-Control-Monitor desk for AI model risk in financial services.
+  x-product-slug: ai-decentralized-guardloop
+  x-source: ai-in-decentralized+ai/deloitte-gx-ai-and-risk-management/
+servers:
+- url: https://api.example.com
+tags:
+- name: UseCases
+  description: AI use case inventory
+- name: Policies
+  description: Fairness and appetite policies
+- name: Assessments
+  description: Risk identification and assessment
+- name: Controls
+  description: Promotion gates and control tests
+- name: Monitoring
+  description: Drift and fairness alerts
+- name: Remediations
+  description: Owned remediation programmes
+paths:
+  /v1/use-cases:
+    get:
+      operationId: listAiUseCases
+      tags:
+      - UseCases
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeAiUseCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+    post:
+      operationId: registerAiUseCase
+      tags:
+      - UseCases
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeAiUseCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiUseCaseCreate'
+  /v1/policies/fairness:
+    get:
+      operationId: listFairnessPolicies
+      tags:
+      - Policies
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeFairnessPolicy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+    post:
+      operationId: createFairnessPolicy
+      tags:
+      - Policies
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeFairnessPolicy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FairnessPolicy'
+  /v1/use-cases/{useCaseId}/assessments:
+    post:
+      operationId: createAssessment
+      tags:
+      - Assessments
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRiskAssessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAssessmentCreate'
+    get:
+      operationId: listAssessments
+      tags:
+      - Assessments
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeRiskAssessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Cursor'
+  /v1/use-cases/{useCaseId}/promotion-gates:
+    post:
+      operationId: evaluatePromotionGate
+      tags:
+      - Controls
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopePromotionGate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - name: useCaseId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionGateRequest'
+  /v1/monitoring/alerts:
+    get:
+      operationId: listMonitorAlerts
+      tags:
+      - Monitoring
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeMonitorAlert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+    post:
+      operationId: raiseMonitorAlert
+      tags:
+      - Monitoring
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeMonitorAlert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitorAlert'
+  /v1/remediations:
+    get:
+      operationId: listRemediations
+      tags:
+      - Remediations
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeRemediationCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+    post:
+      operationId: openRemediation
+      tags:
+      - Remediations
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRemediationCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemediationCaseCreate'
+  /v1/remediations/{remediationId}:
+    get:
+      operationId: getRemediation
+      tags:
+      - Remediations
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRemediationCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      parameters:
+      - name: remediationId
+        in: path
+        required: true
+        schema:
+          type: string
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableEntity:
+      description: Unprocessable entity
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    ResponseMeta:
+      type: object
+      required:
+      - requestId
+      - timestamp
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+    AiUseCase:
+      type: object
+      required:
+      - id
+      - name
+      - customerImpacting
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        customerImpacting:
+          type: boolean
+        sector:
+          type: string
+          enum:
+          - insurance
+          - banking
+          - other
+        status:
+          type: string
+    AiUseCaseCreate:
+      type: object
+      required:
+      - name
+      - customerImpacting
+      properties:
+        name:
+          type: string
+        customerImpacting:
+          type: boolean
+        sector:
+          type: string
+    FairnessPolicy:
+      type: object
+      required:
+      - id
+      - version
+      - rules
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        rules:
+          type: array
+          items:
+            type: string
+        biasTolerance:
+          type: number
+    RiskAssessment:
+      type: object
+      required:
+      - id
+      - useCaseId
+      - stage
+      properties:
+        id:
+          type: string
+        useCaseId:
+          type: string
+        stage:
+          type: string
+          enum:
+          - identify
+          - assess
+        findings:
+          type: array
+          items:
+            type: string
+        residualRisk:
+          type: string
+    RiskAssessmentCreate:
+      type: object
+      required:
+      - stage
+      properties:
+        stage:
+          type: string
+          enum:
+          - identify
+          - assess
+        findings:
+          type: array
+          items:
+            type: string
+    PromotionGate:
+      type: object
+      required:
+      - id
+      - useCaseId
+      - decision
+      properties:
+        id:
+          type: string
+        useCaseId:
+          type: string
+        decision:
+          type: string
+          enum:
+          - allow
+          - block
+        fairnessTestsPassed:
+          type: boolean
+    PromotionGateRequest:
+      type: object
+      required:
+      - modelVersion
+      properties:
+        modelVersion:
+          type: string
+        sandboxEvidenceId:
+          type: string
+    MonitorAlert:
+      type: object
+      required:
+      - id
+      - useCaseId
+      - kind
+      properties:
+        id:
+          type: string
+        useCaseId:
+          type: string
+        kind:
+          type: string
+          enum:
+          - drift
+          - bias
+          - driver_shift
+          - conduct
+        severity:
+          type: string
+        detail:
+          type: string
+    RemediationCase:
+      type: object
+      required:
+      - id
+      - useCaseId
+      - status
+      properties:
+        id:
+          type: string
+        useCaseId:
+          type: string
+        owner:
+          type: string
+        status:
+          type: string
+          enum:
+          - open
+          - in_progress
+          - closed
+        boardReportable:
+          type: boolean
+    RemediationCaseCreate:
+      type: object
+      required:
+      - useCaseId
+      - owner
+      properties:
+        useCaseId:
+          type: string
+        owner:
+          type: string
+        alertId:
+          type: string
+    DataEnvelopeAiUseCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/AiUseCase'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeAiUseCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiUseCase'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DataEnvelopeFairnessPolicy:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/FairnessPolicy'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeFairnessPolicy:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/FairnessPolicy'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DataEnvelopeRiskAssessment:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/RiskAssessment'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeRiskAssessment:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RiskAssessment'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DataEnvelopePromotionGate:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/PromotionGate'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopePromotionGate:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PromotionGate'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DataEnvelopeMonitorAlert:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/MonitorAlert'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeMonitorAlert:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/MonitorAlert'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DataEnvelopeRemediationCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/RemediationCase'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeRemediationCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RemediationCase'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
